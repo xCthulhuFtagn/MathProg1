@@ -53,7 +53,7 @@ double GetT(double a, double b, valarray<double> arg, double epsilon, bool IsMax
                          : [](double x, double y)
                     { return x <= y; });
     double mid;
-    while(a<b){
+    while(a + epsilon < b){ 
         mid = (a+b)/2;
         if(cmp(f(arg - (mid - epsilon)*grad_f(arg)), f(arg - (mid + epsilon)*grad_f(arg)))){
             b = mid;
@@ -72,7 +72,7 @@ void NaiskorSpusk(valarray<double> x, double epsilon, bool IsMax){
                     { return x <= y; });
     while(norm(grad_f(x)) >= epsilon){
         Results(x);
-        t = GetT(0, 0.1, x, 0.01, IsMax);
+        t = GetT(0, 100, x, 0.01, IsMax);
         x += t*grad_f(x);
     }
 }
@@ -85,22 +85,29 @@ void GetOneDimExtr(double diap, valarray<double>& mid, size_t i, double epsilon,
 
     double lefter = mid[i] - diap, righter = mid[i] + diap;
     valarray<double> l_mid, r_mid;
-    while(lefter<righter){
+    while(lefter + epsilon < righter){ // + epsilon to avoid assplosions
         mid[i] = (lefter + righter) / 2;
         l_mid = mid; l_mid[i] -= epsilon;
         r_mid = mid; r_mid[i] += epsilon;
-        if(cmp(f(l_mid), f(r_mid))){
+        if(cmp(f(r_mid), f(l_mid))){
             righter = mid[i];
         } else{
             lefter = mid[i];
         }
     }
+    cout << lefter << ' ' << righter << endl;
 }
 
 void PokoordSpusk(valarray<double> x, double epsilon, bool IsMax){
-    for (auto i = 0; i < x.size(); ++i){
-        Results(x);
-        GetOneDimExtr(100, x, i, epsilon, IsMax);
+    valarray<double> dx(0.1, 3);
+    while ((dx * dx).sum() >= epsilon) {
+        for (auto i = 0; i < x.size(); ++i){
+            Results(x);
+            dx[i] = x[i];
+            GetOneDimExtr(100, x, i, epsilon, IsMax);
+            dx[i] = x[i] - dx[i];
+            Results(x);
+        }
     }
     Results(x);
 }
@@ -118,5 +125,5 @@ int main(){
     valarray<double> x = {100, 100, 100};
     bool IsMax = true;
     //vector<valarray<double>> Guesse = {{-6, 1, 0}, {1, -4, -1}, {0, -1, -2}};
-    PokoordSpusk(x, 0.01, IsMax);
+    NaiskorSpusk(x, 0.01, IsMax);
 }
