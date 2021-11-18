@@ -56,9 +56,9 @@ double GetT(double a, double b, valarray<double> arg, double epsilon, bool IsMax
     double mid;
     while(a + epsilon < b){ 
         mid = (a+b)/2;
-        if(cmp(f(arg - (mid - epsilon)*grad_f(arg)), f(arg + (mid + epsilon)*grad_f(arg)))){
+        if(cmp(f(arg + (mid + epsilon)*grad_f(arg)), f(arg + (mid - epsilon)*grad_f(arg)))){
             b = mid;
-        } else{
+        } else {
             a = mid;
         }
     }
@@ -121,14 +121,14 @@ void Newton(valarray<double> x, double epsilon, bool IsMax){
 }
 
 double GetT2(double a, double b, valarray<double> arg, valarray<double> p, double epsilon, bool IsMax){
-    auto cmp = (IsMax) ? [](double x, double y)
+    auto cmp = (!IsMax) ? [](double x, double y)
                     { return x > y; }
                          : [](double x, double y)
                     { return x <= y; };
     double mid;
     while(a + epsilon < b){ 
         mid = (a+b)/2;
-        if(cmp(f(arg + (mid - epsilon)*p), f(arg + (mid + epsilon)*p))){
+        if(cmp(f(arg + (mid + epsilon)*p), f(arg + (mid - epsilon)*p))){
             b = mid;
         } else{
             a = mid;
