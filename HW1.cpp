@@ -16,6 +16,7 @@ void Results(valarray<double> x){
     cout << "}" << endl;
     cout << "f(x) = " << f(x) << endl;
 }
+
 valarray<double> grad_f(valarray<double> x) { 
     valarray<double> ans = {-6*x[0] + x[1] + 5, -4*x[1] + x[0] - x[2], -2*x[2] - x[1] + 6};
     return ans;
@@ -48,14 +49,14 @@ void GradSpusk(valarray<double> x, double epsilon, bool IsMax){
 }
 
 double GetT(double a, double b, valarray<double> arg, double epsilon, bool IsMax){
-    auto cmp = ((!IsMax) ? [](double x, double y)
+    auto cmp = (!IsMax) ? [](double x, double y)
                     { return x > y; }
                          : [](double x, double y)
-                    { return x <= y; });
+                    { return x <= y; };
     double mid;
     while(a + epsilon < b){ 
         mid = (a+b)/2;
-        if(cmp(f(arg - (mid - epsilon)*grad_f(arg)), f(arg - (mid + epsilon)*grad_f(arg)))){
+        if(cmp(f(arg - (mid - epsilon)*grad_f(arg)), f(arg + (mid + epsilon)*grad_f(arg)))){
             b = mid;
         } else{
             a = mid;
@@ -64,15 +65,12 @@ double GetT(double a, double b, valarray<double> arg, double epsilon, bool IsMax
     return mid;
 }
 
+
 void NaiskorSpusk(valarray<double> x, double epsilon, bool IsMax){
-    double t = 1, c = 1.0/3;
-    auto cmp = ((!IsMax) ? [](double x, double y)
-                    { return x > y; }
-                         : [](double x, double y)
-                    { return x <= y; });
+    double t = 1;
     while(norm(grad_f(x)) >= epsilon){
         Results(x);
-        t = GetT(0, 100, x, 0.01, IsMax);
+        t = GetT(0, 100, x, 0.1, IsMax);
         x += t*grad_f(x);
     }
 }
@@ -82,7 +80,6 @@ void GetOneDimExtr(double diap, valarray<double>& mid, size_t i, double epsilon,
                     { return x > y; }
                          : [](double x, double y)
                     { return x <= y; });
-
     double lefter = mid[i] - diap, righter = mid[i] + diap;
     valarray<double> l_mid, r_mid;
     while(lefter + epsilon < righter){ // + epsilon to avoid assplosions
@@ -106,24 +103,57 @@ void PokoordSpusk(valarray<double> x, double epsilon, bool IsMax){
             dx[i] = x[i];
             GetOneDimExtr(100, x, i, epsilon, IsMax);
             dx[i] = x[i] - dx[i];
-            Results(x);
         }
+        Results(x);
     }
     Results(x);
 }
 
-void Newton(){
-
+void Newton(valarray<double> x, double epsilon, bool IsMax){
+    valarray<double> dx(3);
+    vector<valarray<double>> Guesse = {{-6, 1, 0}, {1, -4, -1}, {0, -1, -2}},
+                             ObrGuesse = {{-9.0 / 52, -1.0 / 26, -1.0 / 52}, {-1.0 / 26, -3.0 / 13, -3.0 / 26}, {1.0 / 52, 3.0 / 26, -23.0 / 52}};
+    while(norm(grad_f(x)) >= epsilon){
+        for(auto i = 0; i < 3; ++i) dx[i] = (ObrGuesse[i] * grad_f(x)).sum();
+        Results(x);
+        x -= dx;
+    }
 }
 
-void SoprPerem(){
+double GetT2(double a, double b, valarray<double> arg, valarray<double> p, double epsilon, bool IsMax){
+    auto cmp = (IsMax) ? [](double x, double y)
+                    { return x > y; }
+                         : [](double x, double y)
+                    { return x <= y; };
+    double mid;
+    while(a + epsilon < b){ 
+        mid = (a+b)/2;
+        if(cmp(f(arg + (mid - epsilon)*p), f(arg + (mid + epsilon)*p))){
+            b = mid;
+        } else{
+            a = mid;
+        }
+    }
+    return mid;
+}
 
+void SoprGrad(valarray<double> x, double epsilon, bool IsMax){
+    valarray<double> p = grad_f(x), prev_x;
+    double t;
+    while (norm(grad_f(x)) >= epsilon)
+    {
+        Results(x);
+        prev_x = x;
+        t = GetT2(0, 100, x, p, epsilon, IsMax);
+        if(IsMax) x += t * p;
+        else x -= t * p;
+        p = grad_f(x) + p * pow(norm(grad_f(x)), 2) / pow(norm(grad_f(prev_x)), 2);
+    }
 }
 
 
 int main(){
     valarray<double> x = {100, 100, 100};
     bool IsMax = true;
-    //vector<valarray<double>> Guesse = {{-6, 1, 0}, {1, -4, -1}, {0, -1, -2}};
-    NaiskorSpusk(x, 0.01, IsMax);
+    SoprGrad(x, 0.01, IsMax);
 }
