@@ -151,9 +151,38 @@ void SoprGrad(valarray<double> x, double epsilon, bool IsMax){
     }
 }
 
+void help(){
+    cout << "Find extremum, using:" << endl;
+    cout << "1) gradient descent with step split" << endl;
+    cout << "2) fastest descent" << endl;
+    cout << "3) by-coordinate descent with step minimization" << endl;
+    cout << "4) Newton method" << endl;
+    cout << "5) conjugate gradient method" << endl;
+    cout << "Your input: ";
+}
 
 int main(){
     valarray<double> x = {100, 100, 100};
     bool IsMax = true;
-    SoprGrad(x, 0.01, IsMax);
+    unsigned input;
+    help();
+    while(cin >> input){
+        switch(input){
+        case 1:
+            GradSpusk(x, 0.01, IsMax);
+            break;
+        case 2:
+            NaiskorSpusk(x, 0.01, IsMax);
+            break;
+        case 3:
+            PokoordSpusk(x, 0.01, IsMax);
+            break;
+        case 4:
+            Newton(x, 0.01, IsMax);
+            break;
+        case 5:
+            SoprGrad(x, 0.01, IsMax);
+        }
+        help();
+    } 
 }
